@@ -33,10 +33,12 @@ def device_jit(fn: Fn, **kwargs: Any) -> Fn:
     """JIT compile a function for CUDA device.
 
     Args:
+    ----
         fn (Fn): The function to be JIT compiled.
         **kwargs: Additional keyword arguments for the JIT compiler.
 
     Returns:
+    -------
         Fn: The JIT compiled function.
 
     """
@@ -47,10 +49,12 @@ def jit(fn: Callable, **kwargs: Any) -> FakeCUDAKernel:
     """JIT compile a function for CUDA.
 
     Args:
+    ----
         fn: The function to be JIT compiled.
         **kwargs: Additional keyword arguments for the JIT compiler.
 
     Returns:
+    -------
         FakeCUDAKernel: The JIT compiled function.
 
     """
@@ -110,10 +114,12 @@ class CudaOps(TensorOps):
         """Reduce a tensor along a specified dimension using a given function.
 
         Args:
+        ----
             fn (Callable[[float, float], float]): The reduction function.
             start (float, optional): The initial value for the reduction. Defaults to 0.0.
 
         Returns:
+        -------
             Callable[[Tensor, int], Tensor]: The reduced tensor.
 
         """
@@ -140,10 +146,12 @@ class CudaOps(TensorOps):
         """Multiply two matrices using CUDA.
 
         Args:
+        ----
             a (Tensor): The first matrix.
             b (Tensor): The second matrix.
 
         Returns:
+        -------
             Tensor: The result of the matrix multiplication.
 
         """
@@ -329,9 +337,11 @@ def sum_practice(a: Tensor) -> TensorData:
     """Sum practice function for CUDA.
 
     Args:
+    ----
         a (Tensor): The input tensor.
 
     Returns:
+    -------
         TensorData: The result of the sum practice operation.
 
     """
@@ -459,7 +469,6 @@ def _mm_practice(out: Storage, a: Storage, b: Storage, size: int) -> None:
     # END ASSIGN3.3
 
 
-
 jit_mm_practice = jit(_mm_practice)
 
 
@@ -467,10 +476,12 @@ def mm_practice(a: Tensor, b: Tensor) -> TensorData:
     """Perform matrix multiplication practice using CUDA.
 
     Args:
+    ----
         a (Tensor): The first input tensor.
         b (Tensor): The second input tensor.
 
     Returns:
+    -------
         TensorData: The result of the matrix multiplication.
 
     """
@@ -560,5 +571,6 @@ def _tensor_matrix_multiply(
     if i < out_shape[1] and j < out_shape[2]:
         out[out_strides[0] * batch + out_strides[1] * i + out_strides[2] * j] = accum
     # END ASSIGN3.4
+
 
 tensor_matrix_multiply = jit(_tensor_matrix_multiply)

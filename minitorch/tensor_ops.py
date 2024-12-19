@@ -198,12 +198,14 @@ class SimpleOps(TensorOps):
                     out[1, j] = fn(out[1, j], a[i, j])
 
         Args:
+        ----
             fn: Function that takes two floats and returns a float, used for reduction.
             start: Initial value to populate the output tensor with before applying the reduction.
             a: TensorData to reduce over.
             dim: Dimension along which to perform the reduction.
 
         Returns:
+        -------
             TensorData: New tensor after applying the reduction.
 
         """

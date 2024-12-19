@@ -7,8 +7,6 @@ from numba import njit as _njit
 from .autodiff import Context
 from .tensor import Tensor
 from .tensor_data import (
-    MAX_DIMS,
-    Index,
     Shape,
     Strides,
     Storage,
@@ -148,6 +146,18 @@ class Conv1dFun(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+        """Compute the gradient of the 2D Convolution.
+
+        Args:
+        ----
+            ctx : Context
+            grad_output : Gradient of the output tensor
+
+        Returns:
+        -------
+            Tuple[Tensor, Tensor] : Gradients of the input and weight tensors
+
+        """
         input, weight = ctx.saved_values
         batch, in_channels, w = input.shape
         out_channels, in_channels, kw = weight.shape
@@ -241,7 +251,34 @@ def _tensor_conv2d(
     s20, s21, s22, s23 = s2[0], s2[1], s2[2], s2[3]
 
     # TODO: Implement for Task 4.2.
-    raise NotImplementedError("Need to implement for Task 4.2")
+    # raise NotImplementedError("Need to implement for Task 4.2")
+
+    batch_, out_channels, out_height, out_width = out_shape
+    batch, in_channels, height, width = input_shape
+    out_channels_, in_channels_, kh, kw = weight_shape
+
+    for out_pos in prange(out_size):
+        out_index = np.empty(4, dtype=np.int32)
+        to_index(out_pos, out_shape, out_index)
+        b, oc, y, x = out_index[0], out_index[1], out_index[2], out_index[3]
+
+        val = 0.0
+        for c in range(in_channels):
+            for ky in range(kh):
+                for kx in range(kw):
+                    if reverse:
+                        in_y = y - (kh - 1 - ky)
+                        in_x = x - (kw - 1 - kx)
+                    else:
+                        in_y = y + ky
+                        in_x = x + kx
+
+                    if 0 <= in_y < height and 0 <= in_x < width:
+                        inp_idx = b * s10 + c * s11 + in_y * s12 + in_x * s13
+                        wgt_idx = oc * s20 + c * s21 + ky * s22 + kx * s23
+                        val += input[inp_idx] * weight[wgt_idx]
+
+        out[out_pos] = val
 
 
 tensor_conv2d = njit(_tensor_conv2d, parallel=True, fastmath=True)
