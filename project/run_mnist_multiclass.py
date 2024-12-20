@@ -1,6 +1,7 @@
 from mnist import MNIST
 
 import minitorch
+from minitorch import Tensor
 
 mndata = MNIST("project/data/")
 images, labels = mndata.load_training()
@@ -41,9 +42,11 @@ class Conv2d(minitorch.Module):
         self.bias = RParam(out_channels, 1, 1)
 
     def forward(self, input):
-        # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
-
+        # # TODO: Implement for Task 4.5.
+        # raise NotImplementedError("Need to implement for Task 4.5")
+        out = minitorch.conv2d(input, self.weights.value)
+        out = out + self.bias.value
+        return out
 
 class Network(minitorch.Module):
     """
@@ -62,18 +65,44 @@ class Network(minitorch.Module):
 
     def __init__(self):
         super().__init__()
-
-        # For vis
         self.mid = None
         self.out = None
 
-        # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        self.conv1 = Conv2d(1, 4, 3, 3)
+        self.conv2 = Conv2d(4, 8, 3, 3)
+        self.pool = minitorch.maxpool2d
+        self.fc1 = Linear(8 * 7 * 7, 64)
+        self.fc2 = Linear(64, 10)
+
+        self.dropout_rate = 0.25
 
     def forward(self, x):
-        # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        x = self.conv1.forward(x)
+        x = x.relu()
+        # print(f"After conv1: {x.shape}, Total elements: {x.size}")
 
+        x = self.conv2.forward(x)
+        x = x.relu()
+        # print(f"After conv2: {x.shape}, Total elements: {x.size}")
+
+        x = self.pool(x, (4, 4))
+        # print(f"After pool: {x.shape}, Total elements: {x.size}")
+
+        x = x.view(x.shape[0], 8 * 7 * 7)
+        # print(f"After flatten: {x.shape}, Total elements: {x.size}")
+
+        x = self.fc1.forward(x)
+        x = x.relu()
+        x = minitorch.dropout(x, self.dropout_rate)
+        # print(f"After fc1: {x.shape}, Total elements: {x.size}")
+
+        x = self.fc2.forward(x)
+        # print(f"After fc2: {x.shape}, Total elements: {x.size}")
+
+        x = minitorch.logsoftmax(x, dim=1)
+        # print(f"After logsoftmax: {x.shape}, Total elements: {x.size}")
+
+        return x
 
 def make_mnist(start, stop):
     ys = []
@@ -86,10 +115,11 @@ def make_mnist(start, stop):
         X.append([[images[i][h * W + w] for w in range(W)] for h in range(H)])
     return X, ys
 
-
 def default_log_fn(epoch, total_loss, correct, total, losses, model):
-    print(f"Epoch {epoch} loss {total_loss} valid acc {correct}/{total}")
-
+    with open("mnist.txt", "a", encoding="utf-8") as log_file:
+        log_message = f"Epoch {epoch} loss {total_loss:.4f} valid acc {correct}/{total}"
+        print(log_message)
+        log_file.write(log_message + "\n")
 
 class ImageTrain:
     def __init__(self):

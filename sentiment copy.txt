@@ -1,0 +1,92 @@
+Setting environment variables...
+Importing libraries...
+Backend initialized.
+Determining maximum sentence length...
+Maximum sentence length: 52
+Encoding training data...
+Encoding sentences: 100%|████| 450/450 [00:00<00:00, 639.26it/s]
+Encoding validation data...
+Encoding sentences: 100%|████| 100/100 [00:00<00:00, 325.24it/s] 
+missing pre-trained embedding for 55 unknown words
+Starting training...
+Epoch 1:   0%|                           | 0/45 [00:00<?, ?it/s]  Batch 0: Current loss 0.6916
+Epoch 1:  22%|████              | 10/45 [00:18<00:25,  1.35it/s]  Batch 10: Current loss 0.6789
+Epoch 1:  44%|████████          | 20/45 [00:20<00:04,  6.16it/s]  Batch 20: Current loss 0.6941
+Epoch 1:  67%|████████████      | 30/45 [00:21<00:02,  6.55it/s]  Batch 30: Current loss 0.6855
+Epoch 1:  89%|████████████████  | 40/45 [00:22<00:00,  7.45it/s]  Batch 40: Current loss 0.6874
+Epoch 1: 100%|██████████████████| 45/45 [00:23<00:00,  1.91it/s] 
+Epoch 1, loss 31.3153, train accuracy: 48.44%, validation accuracy: 47.00%
+Best Valid accuracy: 47.00%
+Epoch 2:   0%|                           | 0/45 [00:00<?, ?it/s]  Batch 0: Current loss 0.7041
+Epoch 2:  22%|████              | 10/45 [00:01<00:04,  7.04it/s]  Batch 10: Current loss 0.6968
+Epoch 2:  44%|████████          | 20/45 [00:02<00:03,  7.10it/s]  Batch 20: Current loss 0.6968
+Epoch 2:  67%|████████████      | 30/45 [00:03<00:01,  9.33it/s]  Batch 30: Current loss 0.6800
+Epoch 2:  89%|████████████████  | 40/45 [00:05<00:00,  7.12it/s]  Batch 40: Current loss 0.6763
+Epoch 2: 100%|██████████████████| 45/45 [00:05<00:00,  7.90it/s] 
+Epoch 2, loss 31.2073, train accuracy: 46.67%, validation accuracy: 51.00%
+Best Valid accuracy: 51.00%
+Epoch 3:   0%|                           | 0/45 [00:00<?, ?it/s]  Batch 0: Current loss 0.7042
+Epoch 3:  22%|████              | 10/45 [00:01<00:04,  7.63it/s]  Batch 10: Current loss 0.6902
+Epoch 3:  44%|████████          | 20/45 [00:02<00:03,  7.35it/s]  Batch 20: Current loss 0.6882
+Epoch 3:  67%|████████████      | 30/45 [00:04<00:01,  7.57it/s]  Batch 30: Current loss 0.6725
+Epoch 3:  89%|████████████████  | 40/45 [00:05<00:00,  7.74it/s]  Batch 40: Current loss 0.6769
+Epoch 3: 100%|██████████████████| 45/45 [00:06<00:00,  7.24it/s] 
+Epoch 3, loss 31.1614, train accuracy: 50.44%, validation accuracy: 53.00%
+Best Valid accuracy: 53.00%
+Epoch 4:   0%|                           | 0/45 [00:00<?, ?it/s]  Batch 0: Current loss 0.7202
+Epoch 4:  22%|████              | 10/45 [00:01<00:04,  7.82it/s]  Batch 10: Current loss 0.6925
+Epoch 4:  44%|████████          | 20/45 [00:02<00:03,  7.35it/s]  Batch 20: Current loss 0.7050
+Epoch 4:  67%|████████████      | 30/45 [00:03<00:01,  7.89it/s]  Batch 30: Current loss 0.6806
+Epoch 4:  89%|████████████████  | 40/45 [00:05<00:00,  6.12it/s]  Batch 40: Current loss 0.6884
+Epoch 4: 100%|██████████████████| 45/45 [00:06<00:00,  7.35it/s] 
+Epoch 4, loss 31.1578, train accuracy: 50.44%, validation accuracy: 52.00%
+Best Valid accuracy: 53.00%
+Epoch 5:   0%|                           | 0/45 [00:00<?, ?it/s]  Batch 0: Current loss 0.6900
+Epoch 5:  22%|████              | 10/45 [00:01<00:04,  7.85it/s]  Batch 10: Current loss 0.6970
+Epoch 5:  44%|████████          | 20/45 [00:02<00:03,  8.05it/s]  Batch 20: Current loss 0.6957
+Epoch 5:  67%|████████████      | 30/45 [00:03<00:01,  8.84it/s]  Batch 30: Current loss 0.6821
+Epoch 5:  87%|███████████████▌  | 39/45 [00:04<00:00,  9.02it/s]  Batch 40: Current loss 0.6708
+Epoch 5: 100%|██████████████████| 45/45 [00:05<00:00,  8.47it/s] 
+Epoch 5, loss 31.0493, train accuracy: 52.22%, validation accuracy: 65.00%
+Best Valid accuracy: 65.00%
+Epoch 6:   0%|                           | 0/45 [00:00<?, ?it/s]  Batch 0: Current loss 0.6967
+Epoch 6:  22%|████              | 10/45 [00:01<00:04,  7.93it/s]  Batch 10: Current loss 0.7027
+Epoch 6:  44%|████████          | 20/45 [00:02<00:03,  7.73it/s]  Batch 20: Current loss 0.6952
+Epoch 6:  67%|████████████      | 30/45 [00:03<00:01,  7.94it/s]  Batch 30: Current loss 0.6801
+Epoch 6:  89%|████████████████  | 40/45 [00:04<00:00,  8.86it/s]  Batch 40: Current loss 0.6654
+Epoch 6: 100%|██████████████████| 45/45 [00:05<00:00,  8.17it/s] 
+Epoch 6, loss 31.0175, train accuracy: 52.44%, validation accuracy: 66.00%
+Best Valid accuracy: 66.00%
+Epoch 7:   0%|                           | 0/45 [00:00<?, ?it/s]  Batch 0: Current loss 0.6990
+Epoch 7:  22%|████              | 10/45 [00:01<00:03,  9.45it/s]  Batch 10: Current loss 0.6825
+Epoch 7:  44%|████████          | 20/45 [00:02<00:03,  7.77it/s]  Batch 20: Current loss 0.7044
+Epoch 7:  67%|████████████      | 30/45 [00:03<00:01,  8.82it/s]  Batch 30: Current loss 0.6781
+Epoch 7:  89%|████████████████  | 40/45 [00:04<00:00,  7.89it/s]  Batch 40: Current loss 0.6716
+Epoch 7: 100%|██████████████████| 45/45 [00:05<00:00,  8.40it/s] 
+Epoch 7, loss 30.8787, train accuracy: 56.22%, validation accuracy: 40.00%
+Best Valid accuracy: 66.00%
+Epoch 8:   0%|                           | 0/45 [00:00<?, ?it/s]  Batch 0: Current loss 0.7021
+Epoch 8:  22%|████              | 10/45 [00:01<00:04,  8.03it/s]  Batch 10: Current loss 0.6887
+Epoch 8:  44%|████████          | 20/45 [00:02<00:03,  7.63it/s]  Batch 20: Current loss 0.6926
+Epoch 8:  67%|████████████      | 30/45 [00:03<00:02,  7.33it/s]  Batch 30: Current loss 0.6835
+Epoch 8:  89%|████████████████  | 40/45 [00:05<00:00,  7.21it/s]  Batch 40: Current loss 0.6767
+Epoch 8: 100%|██████████████████| 45/45 [00:05<00:00,  7.70it/s] 
+Epoch 8, loss 30.8486, train accuracy: 58.44%, validation accuracy: 52.00%
+Best Valid accuracy: 66.00%
+Epoch 9:   0%|                           | 0/45 [00:00<?, ?it/s]  Batch 0: Current loss 0.7088
+Epoch 9:  22%|████              | 10/45 [00:01<00:05,  6.14it/s]  Batch 10: Current loss 0.6966
+Epoch 9:  44%|████████          | 20/45 [00:03<00:04,  5.02it/s]  Batch 20: Current loss 0.6767
+Epoch 9:  67%|████████████      | 30/45 [00:04<00:01,  7.52it/s]  Batch 30: Current loss 0.6795
+Epoch 9:  89%|████████████████  | 40/45 [00:05<00:00,  7.60it/s]  Batch 40: Current loss 0.6552
+Epoch 9: 100%|██████████████████| 45/45 [00:06<00:00,  6.88it/s] 
+Epoch 9, loss 30.7877, train accuracy: 57.11%, validation accuracy: 52.00%
+Best Valid accuracy: 66.00%
+Epoch 10:   0%|                          | 0/45 [00:00<?, ?it/s]  Batch 0: Current loss 0.6973
+Epoch 10:  22%|███▊             | 10/45 [00:01<00:05,  6.23it/s]  Batch 10: Current loss 0.6900
+Epoch 10:  44%|███████▌         | 20/45 [00:02<00:03,  7.46it/s]  Batch 20: Current loss 0.6884
+Epoch 10:  67%|███████████▎     | 30/45 [00:04<00:01,  8.19it/s]  Batch 30: Current loss 0.6605
+Epoch 10:  89%|███████████████  | 40/45 [00:05<00:00,  9.13it/s]  Batch 40: Current loss 0.6679
+Epoch 10: 100%|█████████████████| 45/45 [00:05<00:00,  7.95it/s] 
+Epoch 10, loss 30.7470, train accuracy: 58.44%, validation accuracy: 71.00%
+Best Valid accuracy: 71.00%
+Best validation accuracy exceeded 70% at epoch 10. Stopping training.

@@ -1,12 +1,23 @@
-import random
+import os.path
+
+print("Setting environment variables...")
+
+os.environ['HOME'] = 'C:\\Users\\addas'
+os.environ['EMBEDDINGS_ROOT'] = 'C:\\Users\\addas\\.embeddings'
+
+print("Importing libraries...")
 
 import embeddings
-
+import random
+from tqdm import tqdm
+import numpy as np
 import minitorch
+from minitorch import Tensor, TensorBackend
 from datasets import load_dataset
 
 BACKEND = minitorch.TensorBackend(minitorch.FastOps)
 
+print("Backend initialized.")
 
 def RParam(*shape):
     r = 0.1 * (minitorch.rand(shape, backend=BACKEND) - 0.5)
@@ -34,9 +45,12 @@ class Conv1d(minitorch.Module):
         self.bias = RParam(1, out_channels, 1)
 
     def forward(self, input):
-        # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
-
+        # # TODO: Implement for Task 4.5.
+        # raise NotImplementedError("Need to implement for Task 4.5")
+        x = input.permute(0, 2, 1)
+        out = minitorch.conv1d(x, self.weights.value)
+        out = out + self.bias.value
+        return out
 
 class CNNSentimentKim(minitorch.Module):
     """
@@ -60,17 +74,42 @@ class CNNSentimentKim(minitorch.Module):
         dropout=0.25,
     ):
         super().__init__()
-        self.feature_map_size = feature_map_size
+        self.convs = [
+            Conv1d(embedding_size, feature_map_size, fs) for fs in filter_sizes
+        ]
+
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        # raise NotImplementedError("Need to implement for Task 4.5")
+
+        self.conv1 = Conv1d(embedding_size, feature_map_size, filter_sizes[0])
+        self.conv2 = Conv1d(embedding_size, feature_map_size, filter_sizes[1])
+        self.conv3 = Conv1d(embedding_size, feature_map_size, filter_sizes[2])
+
+        self.dropout_rate = dropout
+        self.linear = Linear(feature_map_size * len(filter_sizes), 1)
 
     def forward(self, embeddings):
         """
         embeddings tensor: [batch x sentence length x embedding dim]
         """
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        # raise NotImplementedError("Need to implement for Task 4.5")
+        feature_maps = []
+        for conv in self.convs:
+            c_out = conv(embeddings)
+            c_out = c_out.relu()
+            c_pooled = minitorch.max(c_out, dim=2)
+            c_pooled = c_pooled.view(c_pooled.shape[0], c_pooled.shape[1])
+            feature_maps.append(c_pooled)
 
+        batch_size = feature_maps[0].shape[0]
+
+        cat_features = cat(feature_maps, dim=1)
+
+        out = self.linear(cat_features)
+        out = minitorch.dropout(out, p=self.dropout_rate)
+        out = out.sigmoid()
+        return out.view(out.shape[0])
 
 # Evaluation helper methods
 def get_predictions_array(y_true, model_output):
@@ -85,6 +124,32 @@ def get_predictions_array(y_true, model_output):
     return predictions_array
 
 
+def cat(tensors: list[Tensor], dim: int) -> Tensor:
+    if not tensors:
+        raise ValueError("Tensor list is empty")
+
+    num_dims = len(tensors[0].shape)
+    for tensor in tensors:
+        if len(tensor.shape) != num_dims:
+            raise ValueError("All tensors must have the same number of dimensions")
+
+    for d in range(num_dims):
+        if d != dim:
+            size = tensors[0].shape[d]
+            for tensor in tensors[1:]:
+                if tensor.shape[d] != size:
+                    raise ValueError(f"Size mismatch at dimension {d}")
+
+    new_shape = list(tensors[0].shape)
+    new_shape[dim] = sum(tensor.shape[dim] for tensor in tensors)
+    new_shape = tuple(new_shape)
+
+    np_arrays = [tensor.to_numpy() for tensor in tensors]
+    concatenated_np = np.concatenate(np_arrays, axis=dim)
+
+    new_storage = concatenated_np.flatten().tolist()
+    return Tensor.make(new_storage, new_shape, backend=tensors[0].backend)
+
 def get_accuracy(predictions_array):
     correct = 0
     for y_true, y_pred, logit in predictions_array:
@@ -94,7 +159,6 @@ def get_accuracy(predictions_array):
 
 
 best_val = 0.0
-
 
 def default_log_fn(
     epoch,
@@ -106,14 +170,22 @@ def default_log_fn(
     validation_accuracy,
 ):
     global best_val
-    best_val = (
-        best_val if best_val > validation_accuracy[-1] else validation_accuracy[-1]
-    )
-    print(f"Epoch {epoch}, loss {train_loss}, train accuracy: {train_accuracy[-1]:.2%}")
-    if len(validation_predictions) > 0:
-        print(f"Validation accuracy: {validation_accuracy[-1]:.2%}")
-        print(f"Best Valid accuracy: {best_val:.2%}")
+    current_train_acc = train_accuracy[-1] if train_accuracy else 0.0
+    current_val_acc = validation_accuracy[-1] if validation_accuracy else 0.0
+    best_val = max(best_val, current_val_acc)
 
+    log_message = (
+        f"Epoch {epoch}, "
+        f"loss {train_loss:.4f}, "
+        f"train accuracy: {current_train_acc*100:.2f}%, "
+        f"validation accuracy: {current_val_acc*100:.2f}%\n"
+        f"Best Valid accuracy: {best_val*100:.2f}%\n"
+    )
+
+    print(log_message.strip())
+
+    with open("sentiment.txt", "a", encoding="utf-8") as log_file:
+        log_file.write(log_message)
 
 class SentenceSentimentTrain:
     def __init__(self, model):
@@ -128,6 +200,7 @@ class SentenceSentimentTrain:
         data_val=None,
         log_fn=default_log_fn,
     ):
+        print("Starting training...")
         model = self.model
         (X_train, y_train) = data_train
         n_training_samples = len(X_train)
@@ -142,28 +215,31 @@ class SentenceSentimentTrain:
             train_predictions = []
             batch_size = min(batch_size, n_training_samples)
             for batch_num, example_num in enumerate(
-                range(0, n_training_samples, batch_size)
-            ):
-                y = minitorch.tensor(
-                    y_train[example_num : example_num + batch_size], backend=BACKEND
-                )
-                x = minitorch.tensor(
-                    X_train[example_num : example_num + batch_size], backend=BACKEND
-                )
-                x.requires_grad_(True)
-                y.requires_grad_(True)
-                # Forward
-                out = model.forward(x)
-                prob = (out * y) + (out - 1.0) * (y - 1.0)
-                loss = -(prob.log() / y.shape[0]).sum()
-                loss.view(1).backward()
+                    tqdm(range(0, n_training_samples, batch_size), desc=f"Epoch {epoch}")
+                ):
+                    y = minitorch.tensor(
+                        y_train[example_num : example_num + batch_size], backend=BACKEND
+                    )
+                    x = minitorch.tensor(
+                        X_train[example_num : example_num + batch_size], backend=BACKEND
+                    )
+                    x.requires_grad_(True)
+                    y.requires_grad_(True)
+                    # Forward
+                    out = model.forward(x)
+                    prob = (out * y) + (out - 1.0) * (y - 1.0)
+                    loss = -(prob.log() / y.shape[0]).sum()
+                    loss.view(1).backward()
 
-                # Save train predictions
-                train_predictions += get_predictions_array(y, out)
-                total_loss += loss[0]
+                    # Save train predictions
+                    train_predictions += get_predictions_array(y, out)
+                    total_loss += loss[0]
 
-                # Update
-                optim.step()
+                    # Update
+                    optim.step()
+
+                    if batch_num % 10 == 0:
+                        print(f"  Batch {batch_num}: Current loss {loss[0]:.4f}")
 
             # Evaluate on validation set at the end of the epoch
             validation_predictions = []
@@ -180,7 +256,8 @@ class SentenceSentimentTrain:
                 )
                 out = model.forward(x)
                 validation_predictions += get_predictions_array(y, out)
-                validation_accuracy.append(get_accuracy(validation_predictions))
+                val_acc = get_accuracy(validation_predictions)
+                validation_accuracy.append(val_acc)
                 model.train()
 
             train_accuracy.append(get_accuracy(train_predictions))
@@ -196,41 +273,43 @@ class SentenceSentimentTrain:
             )
             total_loss = 0.0
 
+            if val_acc > 0.7:
+                print(f"Best validation accuracy exceeded 70% at epoch {epoch}. Stopping training.")
+                break
+
 
 def encode_sentences(
     dataset, N, max_sentence_len, embeddings_lookup, unk_embedding, unks
 ):
     Xs = []
     ys = []
-    for sentence in dataset["sentence"][:N]:
-        # pad with 0s to max sentence length in order to enable batching
-        # TODO: move padding to training code
+    for sentence in tqdm(dataset["sentence"][:N], desc="Encoding sentences"):
         sentence_embedding = [[0] * embeddings_lookup.d_emb] * max_sentence_len
         for i, w in enumerate(sentence.split()):
             sentence_embedding[i] = [0] * embeddings_lookup.d_emb
             if w in embeddings_lookup:
                 sentence_embedding[i][:] = embeddings_lookup.emb(w)
             else:
-                # use random embedding for unks
                 unks.add(w)
                 sentence_embedding[i][:] = unk_embedding
         Xs.append(sentence_embedding)
-
-    # load labels
     ys = dataset["label"][:N]
     return Xs, ys
 
 
 def encode_sentiment_data(dataset, pretrained_embeddings, N_train, N_val=0):
-    #  Determine max sentence length for padding
+    print("Determining maximum sentence length...")
+
     max_sentence_len = 0
     for sentence in dataset["train"]["sentence"] + dataset["validation"]["sentence"]:
         max_sentence_len = max(max_sentence_len, len(sentence.split()))
+    print(f"Maximum sentence length: {max_sentence_len}")
 
     unks = set()
     unk_embedding = [
         0.1 * (random.random() - 0.5) for i in range(pretrained_embeddings.d_emb)
     ]
+    print("Encoding training data...")
     X_train, y_train = encode_sentences(
         dataset["train"],
         N_train,
@@ -239,6 +318,7 @@ def encode_sentiment_data(dataset, pretrained_embeddings, N_train, N_val=0):
         unk_embedding,
         unks,
     )
+    print("Encoding validation data...")
     X_val, y_val = encode_sentences(
         dataset["validation"],
         N_val,
@@ -253,6 +333,9 @@ def encode_sentiment_data(dataset, pretrained_embeddings, N_train, N_val=0):
 
 
 if __name__ == "__main__":
+    with open("sentiment.txt", "w", encoding="utf-8") as log_file:
+        log_file.write("Training Logs\n\n")
+
     train_size = 450
     validation_size = 100
     learning_rate = 0.01
