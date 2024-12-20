@@ -6,11 +6,26 @@ from numba import cuda
 # ============ CUDA Kernel Implementations ============
 
 @cuda.jit
-def conv1d_kernel(in_data, weight, out_data):
+def conv1d_kernel(in_data: cuda.cudadrv.devicearray.DeviceNDArray, weight: cuda.cudadrv.devicearray.DeviceNDArray, out_data: cuda.cudadrv.devicearray.DeviceNDArray) -> None:
+    """Perform a 1D convolution using CUDA.
+
+    Parameters
+    ----------
+    in_data : cuda.cudadrv.devicearray.DeviceNDArray
+        Input data array of shape (B, IC, W).
+    weight : cuda.cudadrv.devicearray.DeviceNDArray
+        Weight array of shape (OC, IC2, KW).
+    out_data : cuda.cudadrv.devicearray.DeviceNDArray
+        Output data array of shape (B, OC, W_out).
+
+    Returns
+    -------
+    None
+
+    """
     b, ic, w_in = in_data.shape
     oc, ic2, kw = weight.shape
 
-    # 当前线程负责的输出元素位置
     b_idx, oc_idx, w_idx = cuda.grid(3)
 
     if b_idx < b and oc_idx < oc and w_idx < (w_in - kw + 1):
@@ -22,6 +37,21 @@ def conv1d_kernel(in_data, weight, out_data):
 
 
 def conv1d(in_data: np.ndarray, weight: np.ndarray) -> np.ndarray:
+    """Perform a 1D convolution using CUDA.
+
+    Parameters
+    ----------
+    in_data : np.ndarray
+        Input data array of shape (B, IC, W).
+    weight : np.ndarray
+        Weight array of shape (OC, IC2, KW).
+
+    Returns
+    -------
+    np.ndarray
+        Output data array of shape (B, OC, W_out).
+
+    """
     B, IC, W = in_data.shape
     OC, IC2, KW = weight.shape
     assert IC == IC2
@@ -45,11 +75,26 @@ def conv1d(in_data: np.ndarray, weight: np.ndarray) -> np.ndarray:
 
 
 @cuda.jit
-def conv2d_kernel(in_data, weight, out_data):
+def conv2d_kernel(in_data: np.ndarray, weight: np.ndarray, out_data: np.ndarray) -> None:
+    """Perform a 2D convolution using CUDA.
+
+    Parameters
+    ----------
+    in_data : np.ndarray
+        Input data array of shape (B, IC, H, W).
+    weight : np.ndarray
+        Weight array of shape (OC, IC2, KH, KW).
+    out_data : np.ndarray
+        Output data array of shape (B, OC, H_out, W_out).
+
+    Returns
+    -------
+    None
+
+    """
     b, ic, h_in, w_in = in_data.shape
     oc, ic2, kh, kw = weight.shape
 
-    # 当前线程负责的输出元素位置
     b_idx, oc_idx, hw_idx = cuda.grid(3)
 
     H_out = h_in - kh + 1
@@ -62,11 +107,29 @@ def conv2d_kernel(in_data, weight, out_data):
         for ic_idx in range(ic):
             for kh_idx in range(kh):
                 for kw_idx in range(kw):
-                    val += in_data[b_idx, ic_idx, h_idx + kh_idx, w_idx + kw_idx] * weight[oc_idx, ic_idx, kh_idx, kw_idx]
+                    val += (
+                        in_data[b_idx, ic_idx, h_idx + kh_idx, w_idx + kw_idx]
+                        * weight[oc_idx, ic_idx, kh_idx, kw_idx]
+                    )
         out_data[b_idx, oc_idx, h_idx, w_idx] = val
 
 
 def conv2d(in_data: np.ndarray, weight: np.ndarray) -> np.ndarray:
+    """Perform a 2D convolution using CUDA.
+
+    Parameters
+    ----------
+    in_data : np.ndarray
+        Input data array of shape (B, IC, H, W).
+    weight : np.ndarray
+        Weight array of shape (OC, IC2, KH, KW).
+
+    Returns
+    -------
+    np.ndarray
+        Output data array of shape (B, OC, H_out, W_out).
+
+    """
     B, IC, H, W = in_data.shape
     OC, IC2, KH, KW = weight.shape
     assert IC == IC2
@@ -89,9 +152,26 @@ def conv2d(in_data: np.ndarray, weight: np.ndarray) -> np.ndarray:
     d_out.copy_to_host(out_data)
     return out_data
 
+
 # ============ CPU reference implementations ============
 
+
 def cpu_conv1d(in_data: np.ndarray, weight: np.ndarray) -> np.ndarray:
+    """Perform a 1D convolution on the CPU.
+
+    Parameters
+    ----------
+    in_data : np.ndarray
+        Input data array of shape (B, IC, W).
+    weight : np.ndarray
+        Weight array of shape (OC, IC2, KW).
+
+    Returns
+    -------
+    np.ndarray
+        Output data array of shape (B, OC, W_out).
+
+    """
     B, IC, W = in_data.shape
     OC, IC2, KW = weight.shape
     assert IC == IC2
@@ -104,11 +184,27 @@ def cpu_conv1d(in_data: np.ndarray, weight: np.ndarray) -> np.ndarray:
                 val = 0.0
                 for ic in range(IC):
                     for k in range(KW):
-                        val += in_data[b, ic, w+k] * weight[oc, ic, k]
+                        val += in_data[b, ic, w + k] * weight[oc, ic, k]
                 out_data[b, oc, w] = val
     return out_data
 
+
 def cpu_conv2d(in_data: np.ndarray, weight: np.ndarray) -> np.ndarray:
+    """Perform a 2D convolution on the CPU.
+
+    Parameters
+    ----------
+    in_data : np.ndarray
+        Input data array of shape (B, IC, H, W).
+    weight : np.ndarray
+        Weight array of shape (OC, IC2, KH, KW).
+
+    Returns
+    -------
+    np.ndarray
+        Output data array of shape (B, OC, H_out, W_out).
+
+    """
     B, IC, H, W = in_data.shape
     OC, IC2, KH, KW = weight.shape
     assert IC == IC2
@@ -124,22 +220,44 @@ def cpu_conv2d(in_data: np.ndarray, weight: np.ndarray) -> np.ndarray:
                     for ic in range(IC):
                         for kh in range(KH):
                             for kw in range(KW):
-                                val += in_data[b, ic, h+kh, w+kw] * weight[oc, ic, kh, kw]
+                                val += (
+                                    in_data[b, ic, h + kh, w + kw]
+                                    * weight[oc, ic, kh, kw]
+                                )
                     out_data[b, oc, h, w] = val
     return out_data
 
+
 # ============ Test functions ============
 
-def assert_allclose(cpu_result, gpu_result, atol=1e-5, rtol=1e-5):
+
+def assert_allclose(cpu_result: np.ndarray, gpu_result: np.ndarray, atol: float = 1e-5, rtol: float = 1e-5) -> None:
+    """Assert that two arrays are element-wise equal within a tolerance.
+
+    Parameters
+    ----------
+        cpu_result (np.ndarray): The result from the CPU computation.
+        gpu_result (np.ndarray): The result from the GPU computation.
+        atol (float): Absolute tolerance.
+        rtol (float): Relative tolerance.
+
+    Raises
+    ------
+        AssertionError: If the arrays are not equal within the given tolerance.
+
+    """
     if not np.allclose(cpu_result, gpu_result, atol=atol, rtol=rtol):
         diff = np.abs(cpu_result - gpu_result)
-        print("Max diff:", diff.max(), "at", np.unravel_index(diff.argmax(), diff.shape))
+        print(
+            "Max diff:", diff.max(), "at", np.unravel_index(diff.argmax(), diff.shape)
+        )
         raise AssertionError("CPU and GPU results do not match within tolerance.")
     else:
         print("Test passed! CPU and GPU results are close.")
 
-# 非平凡测试1（1D）：随机输入与权重
-def test_conv1d_random():
+
+def test_conv1d_random() -> None:
+    """Test the 1D convolution with random data."""
     np.random.seed(42)
     B, IC, W = 2, 3, 10
     OC, KW = 4, 3
@@ -153,16 +271,17 @@ def test_conv1d_random():
     print("1D random test GPU:\n", gpu_res)
     assert_allclose(cpu_res, gpu_res)
 
-# 非平凡测试2（1D）：有规律的输入与核
-def test_conv1d_pattern():
-    B, IC, W = 1, 2, 8
-    OC, KW = 2, 3
-    in_data = np.array([[[1,2,3,4,5,6,7,8],
-                         [2,3,4,5,6,7,8,9]]], dtype=np.float32)
-    weight = np.array([[[ -1, 0, 1],
-                        [ -1, 0, 1]],
-                       [[  1, 1, 1],
-                        [  0, 0,-1]]], dtype=np.float32)
+
+def test_conv1d_pattern() -> None:
+    """Test the 1D convolution with a specific pattern."""
+    # B, IC, W = 1, 2, 8
+    # OC, KW = 2, 3
+    in_data = np.array(
+        [[[1, 2, 3, 4, 5, 6, 7, 8], [2, 3, 4, 5, 6, 7, 8, 9]]], dtype=np.float32
+    )
+    weight = np.array(
+        [[[-1, 0, 1], [-1, 0, 1]], [[1, 1, 1], [0, 0, -1]]], dtype=np.float32
+    )
 
     cpu_res = cpu_conv1d(in_data, weight)
     gpu_res = conv1d(in_data, weight)
@@ -171,8 +290,8 @@ def test_conv1d_pattern():
     print("1D pattern test GPU:\n", gpu_res)
     assert_allclose(cpu_res, gpu_res)
 
-# 非平凡测试1（2D）：随机输入与权重
-def test_conv2d_random():
+def test_conv2d_random() -> None:
+    """Test the 2D convolution with random data."""
     np.random.seed(123)
     B, IC, H, W = 2, 3, 8, 8
     OC, KH, KW = 4, 3, 3
@@ -186,15 +305,13 @@ def test_conv2d_random():
     print("2D random test GPU:\n", gpu_res)
     assert_allclose(cpu_res, gpu_res)
 
-# 非平凡测试2（2D）：有规律输入与Sobel风格卷积核
-def test_conv2d_pattern():
-    B, IC, H, W = 1, 1, 5, 5
-    OC, KH, KW = 1, 3, 3
-    # 简单的0-24递增输入
-    in_data = np.arange(H*W).reshape(1,1,H,W).astype(np.float32)
-    weight = np.array([[[[-1,0,1],
-                         [-2,0,2],
-                         [-1,0,1]]]]).astype(np.float32)
+
+def test_conv2d_pattern() -> None:
+    """Test the 2D convolution with a specific pattern."""
+    _, _, H, W = 1, 1, 5, 5
+    # OC, KH, KW = 1, 3, 3
+    in_data = np.arange(H * W).reshape(1, 1, H, W).astype(np.float32)
+    weight = np.array([[[[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]]]).astype(np.float32)
 
     cpu_res = cpu_conv2d(in_data, weight)
     gpu_res = conv2d(in_data, weight)
@@ -202,6 +319,7 @@ def test_conv2d_pattern():
     print("2D pattern test CPU:\n", cpu_res)
     print("2D pattern test GPU:\n", gpu_res)
     assert_allclose(cpu_res, gpu_res)
+
 
 if __name__ == "__main__":
     print("Running 1D conv tests...")
@@ -486,4 +604,3 @@ if __name__ == "__main__":
 #    [8. 8. 8.]
 #    [8. 8. 8.]]]]
 # Test passed! CPU and GPU results are close.
-

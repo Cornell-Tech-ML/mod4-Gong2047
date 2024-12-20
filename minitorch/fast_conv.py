@@ -20,6 +20,16 @@ Fn = TypeVar("Fn")
 
 
 def njit(fn: Fn, **kwargs: Any) -> Fn:
+    """Just-in-time compile a function with Numba's njit decorator.
+
+    Args:
+        fn (Fn): The function to be compiled.
+        **kwargs (Any): Additional keyword arguments for the njit decorator.
+
+    Returns:
+        Fn: The compiled function.
+
+    """
     return _njit(inline="always", **kwargs)(fn)  # type: ignore
 
 
@@ -146,7 +156,7 @@ class Conv1dFun(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
-        """Compute the gradient of the 2D Convolution.
+        """Compute the gradient of the 1D Convolution.
 
         Args:
         ----
@@ -312,6 +322,18 @@ class Conv2dFun(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+        """Compute the gradient of the 2D Convolution.
+
+        Args:
+        ----
+            ctx : Context
+            grad_output : Gradient of the output tensor
+
+        Returns:
+        -------
+            Tuple[Tensor, Tensor] : Gradients of the input and weight tensors
+
+        """
         input, weight = ctx.saved_values
         batch, in_channels, h, w = input.shape
         out_channels, in_channels, kh, kw = weight.shape

@@ -230,5 +230,7 @@ def dropout(a: Tensor, p: float, ignore: bool = False) -> Tensor:
     if p <= 0.0:
         return a
     mask = (np.random.rand(*a.shape) > p).astype(np.float64)
-    mask_t = Tensor(a.backend.from_numpy(mask), backend=a.backend)
+    mask_t = Tensor.make(mask.flatten().tolist(), mask.shape, backend=a.backend)
+    mask_t.requires_grad_(False)
+
     return a * mask_t
